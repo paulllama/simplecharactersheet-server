@@ -1,0 +1,37 @@
+{
+  "name": "simplecharactersheet-server",
+  "version": "1.0.0",
+  "description": "API for simplecharactersheet.com",
+  "main": "build/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc",
+    "start": "node build/index.js",
+    "dev": "nodemon src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulllama/simplecharactersheet-server.git"
+  },
+  "author": "Paul Armer, https://paularmer.website",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/paulllama/simplecharactersheet-server/issues"
+  },
+  "homepage": "https://simplecharactersheet.com",
+  "dependencies": {
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "nodemon": "^3.1.9",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  },
+  "nodemonConfig": {
+    "watch": ["src"],
+    "ext": "ts"
+  }
+}
