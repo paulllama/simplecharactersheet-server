@@ -5,7 +5,7 @@
 ### Setup 
 
 1. Copy `.env.template` to `.env`
-2. Fill in `.env` with info from Bitwarden (not available for people who aren't Paul)
+2. Fill in `.env` with info from Bitwarden or Heroku (not available for people who aren't Paul)
 
 ### Run Locally
 

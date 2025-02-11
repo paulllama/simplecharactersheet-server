@@ -1,23 +1,22 @@
-import express, { Express, Request, Response } from "express";
-import dotenv from "dotenv";
-import mongoose from "mongoose";
+import express, { Express, Request, Response } from "express"
+import dotenv from "dotenv"
+import mongoose from "mongoose"
+
+import Models from "./models"
 
 dotenv.config();
 
-const app: Express = express();
 const port = process.env.PORT;
 
-const mongoUsername: string = process.env.MONGODB_USERNAME || '';
-const mongoPassword: string = process.env.MONGODB_PASSWORD || '';
-const mongoCluserUri: string = process.env.MONGODB_CLUSTER_URI || '';
-const mongoConnectionUri: string = 
-    `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoCluserUri}/?retryWrites=true&w=majority&appName=simplecharactersheet`
-await mongoose.connect(mongoConnectionUri)
-
+const app: Express = express();
 app.get("/", (req: Request, res: Response) => {
-  res.send(`Express & TypeScript Server - port: ${port}`);
+    res.send(`Express & TypeScript Server - port: ${port}`);
 });
 
-app.listen(port, () => {
-  console.log(`[server]: Server is running at http://localhost:${port}`);
-});
+const serve = async (): Promise<String | void> => {
+    await mongoose.connect(Models.MONGO_CONNECTION_URI)
+    app.listen(port, () => {
+        console.log(`[server]: Server is running at http://localhost:${port}`);
+    });
+}
+serve().catch(console.error)

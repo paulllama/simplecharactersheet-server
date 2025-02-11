@@ -1,6 +1,6 @@
 import mongoose from 'mongoose'
 
-const userSchema = new mongoose.Schema({
+const userSchema: mongoose.Schema = new mongoose.Schema({
     username: String,
     email: String,
     password: String, // hash it
