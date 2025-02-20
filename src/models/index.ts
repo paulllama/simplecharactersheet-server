@@ -1,5 +1,7 @@
 import dotenv from 'dotenv'
-import User from './user'
+import Game from './game'
+import Character from './character'
+import Sheet from './sheet'
 
 dotenv.config();
 
@@ -12,6 +14,8 @@ const MONGO_CONNECTION_URI: string =
     `mongodb+srv://${mongoUsername}:${mongoPassword}@${mongoCluserUri}/${mongoDbName}?${mongoConnectionOptions}`
 
 export default {
-    User,
+    Character,
+    Game,
+    Sheet,
     MONGO_CONNECTION_URI
 }
