@@ -1,10 +1,28 @@
 import { Express, Request, Response } from 'express'
 import { requireAuth, getAuth } from '@clerk/express'
-import Models from '../models'
-import Sheet from '../models/sheet'
+import Controllers from '../controllers'
+
+
+const requestHandler = (handler: (req: Request) => Promise<any>): ((req: Request, res: Response) => Promise<void>) => 
+    async (req: Request, res: Response) => {
+        try {
+            const result = await handler(req)
+            if (result) {
+                res.json(result)
+            } else {
+                res.status(404).json({
+                    error: 'resource not found'
+                })
+            }
+        } catch (e) {
+            res.status(404).json({
+                error: `${e}`
+            })
+        }
+    }
 
 export const addRoutesToExpressApp = (app: Express): Express => {
-    app.get("/", (req: Request, res: Response) => {
+    app.get("/", (_: Request, res: Response) => {
         res.send(`SimpleCharacterSheet API`)
     })
     
@@ -12,48 +30,17 @@ export const addRoutesToExpressApp = (app: Express): Express => {
 
     app.get(
         '/games',
-        async (req: Request, res: Response) => {
-            const games = await Models.Game.find({ active: true }).select(['_id', 'name', 'icon']).exec()
-            res.json(games)
-        }
+        requestHandler(async () => {
+            return Controllers.Game.getAllActive()
+        })
     )
     
     app.get(
         '/games/:gameId', 
-        async (req: Request, res: Response) => {
+        requestHandler(async (req: Request) => {
             const { gameId } = req.params
-            const gameData = await Models.Game.findById(gameId).lean().exec()
-            if (!gameData) {
-                res.status(404).json({
-                    error: 'game not found'
-                })
-            } else {
-                const sheets = await Models.Sheet
-                    .find({ gameId: gameData._id })
-                    .select(['_id', 'name', 'icon'])
-                    .exec()
-
-                res.json({
-                    ...gameData,
-                    sheets,
-                })
-            }
-        }
-    )
-    
-    app.get(
-        '/games/:gameId/sheets/:sheetId', 
-        async (req: Request, res: Response) => {
-            const { sheetId } = req.params
-            const sheet = await Models.Sheet.findById(sheetId).exec()
-            if (!sheet) {
-                res.status(404).json({
-                    error: 'sheet not found'
-                })
-            } else {
-                res.json(sheet)
-            }
-        }
+            return Controllers.Game.getOneWithSheetSummaries(gameId)
+        })
     )
     
     /* CHARACTERS */
@@ -61,37 +48,25 @@ export const addRoutesToExpressApp = (app: Express): Express => {
     app.get(
         '/characters/', 
         requireAuth(), 
-        async (req: Request, res: Response) => {
+        requestHandler(async (req: Request) => {
             const { userId } = getAuth(req)
-
-            const characters = await Models.Character.find({ userId }).exec()
-            res.json(characters)
-        }
+            return Controllers.Character.getAllForUser(userId)
+        })
     )
-    
     
     app.put(
         '/characters/', 
         requireAuth(), 
-        async (req: Request, res: Response) => {
+        requestHandler(async (req: Request) => {
             const { userId } = getAuth(req)
-            console.log('/characters/', req.headers['content-type'])   
             const { gameId, sheetId } = req.body
-
-            if (gameId) {
-                const character = await Models.Character.create({
-                    userId,
-                    gameId,
-                    sheetId,
-                })
-
-                res.json(character._id)
-            } else {
-                res.status(403).json({
-                    error: 'gameId required'
-                })
-            }
-        }
+            const character = await Controllers.Character.create(
+                userId,
+                gameId,
+                sheetId,
+            )
+            return character._id
+        })
     )
     
     /* SINGLE CHARACTER */
@@ -99,41 +74,20 @@ export const addRoutesToExpressApp = (app: Express): Express => {
     app.get(
         '/characters/:characterId', 
         requireAuth(), // auth required to view a character, but it doesn't have to be your own
-        async (req: Request, res: Response) => {
+        requestHandler(async (req: Request) => {
             const { characterId } = req.params
-
-            const character = await Models.Character.findById(characterId).exec()
-            
-            if (!character) {
-                res.status(404).json({
-                    error: 'character does not exist'
-                })
-            } else {
-                res.json(character)
-            }
-        }
+            return Controllers.Character.getOne(characterId)
+        })
     )
     
     app.post(
         '/characters/:characterId', 
         requireAuth(), 
-        async (req: Request, res: Response): Promise<void> => {
+        requestHandler(async (req: Request): Promise<void> => {
             const { characterId } = req.params
             const { userId } = getAuth(req)
-            const character = await Models.Character.findById(characterId).exec()
-
-            if (!character) {
-                res.status(404).json({
-                    error: 'character does not exist'
-                })
-            } else if (character.userId !== userId) {
-                res.status(403).json({
-                    error: 'character does not belong to signed in user'
-                })
-            } else {
-                // TODO: do stuff
-            }
-        }
+            return Controllers.Character.update(userId, characterId, req.body)
+        })
     )
 
     return app
